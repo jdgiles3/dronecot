@@ -1,0 +1,50 @@
+# FastAPI Backend
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+websockets==12.0
+
+# Kafka
+aiokafka==0.10.0
+kafka-python==2.0.2
+
+# Redis
+redis==5.0.1
+aioredis==2.0.1
+
+# OpenSearch
+opensearch-py==2.4.2
+
+# SeaweedFS
+requests==2.31.0
+aiohttp==3.9.1
+
+# Tika
+tika==2.6.0
+
+# LLM Integration
+ollama==0.1.6
+httpx==0.26.0
+openai==1.10.0
+
+# Playwright for automation
+playwright==1.41.0
+
+# Vision/Image processing
+pillow==10.2.0
+opencv-python-headless==4.9.0.80
+
+# Data processing
+pandas==2.1.4
+numpy==1.26.3
+
+# Utilities
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-dotenv==1.0.0
+aiofiles==23.2.1
+croniter==2.0.1
+apscheduler==3.10.4
+
+# Embeddings
+sentence-transformers==2.3.1

@@ -1,0 +1,127 @@
+version: '3.8'
+
+services:
+  # Kafka and Zookeeper
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+
+  # OpenSearch
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    ports:
+      - "5601:5601"
+    environment:
+      - OPENSEARCH_HOSTS=["http://opensearch:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+    depends_on:
+      - opensearch
+
+  # SeaweedFS
+  seaweedfs-master:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "9333:9333"
+      - "19333:19333"
+    command: "master -ip=seaweedfs-master -ip.bind=0.0.0.0"
+    volumes:
+      - seaweed_master:/data
+
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "8080:8080"
+      - "18080:18080"
+    command: "volume -mserver=seaweedfs-master:9333 -ip.bind=0.0.0.0 -port=8080"
+    depends_on:
+      - seaweedfs-master
+    volumes:
+      - seaweed_volume:/data
+
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:latest
+    ports:
+      - "8888:8888"
+      - "18888:18888"
+    command: "filer -master=seaweedfs-master:9333 -ip.bind=0.0.0.0"
+    depends_on:
+      - seaweedfs-master
+      - seaweedfs-volume
+    volumes:
+      - seaweed_filer:/data
+
+  # Apache Tika
+  tika:
+    image: apache/tika:2.9.1.0
+    ports:
+      - "9998:9998"
+
+  # Ollama for local LLMs
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+volumes:
+  zookeeper_data:
+  kafka_data:
+  redis_data:
+  opensearch_data:
+  seaweed_master:
+  seaweed_volume:
+  seaweed_filer:
+  ollama_data:
