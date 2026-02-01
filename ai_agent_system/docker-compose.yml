@@ -102,19 +102,22 @@ services:
       - "9998:9998"
 
   # Ollama for local LLMs
+  # Note: GPU support is optional. Remove 'deploy' section for CPU-only
+  # Or install Ollama directly: curl -fsSL https://ollama.com/install.sh | sh
   ollama:
     image: ollama/ollama:latest
     ports:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: all
-              capabilities: [gpu]
+    # Uncomment below for GPU support (requires NVIDIA Docker runtime)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
 
 volumes:
   zookeeper_data:
